@@ -21,6 +21,8 @@ class advectionPDE:
         self.a = a      # velocity
         self.dx = dx    # spatial step
         self.dt = dt    # time step
+        self.writeOn = False    # write output to a file?
+        self.writeNow = 0.      # stores time between writes
 
     # function that applies boundary conditions
     def correctBC(self, f):
@@ -52,6 +54,11 @@ class advectionPDE:
         for i in range(n):
             self.step()
 
+            # save to a file
+            self.T = i * dt
+            if self.writeOn:
+                self.write()
+
     # discretisation of df/dx term
     def gradient(self, f, dx, i):
         if self.spatialScheme == "central":
@@ -77,6 +84,28 @@ class advectionPDE:
             sys.exit("wrong time scheme selected...\nprogram closing")
         return f
 
+    # file output function
+    def write(self):
+        # increase current time variable
+        self.writeNow += self.dt
+        # if the time variable is greater than the write interval
+        # output data to a file
+        if self.writeNow > self.writeEvery:
+            # create file name based on current time (real time)
+            name = "data/{0}.txt".format(self.T)
+            x = np.zeros((2, self.N))
+            x[0][:] = self.x[:]
+            x[1][:] = self.f[:]
+            np.savetxt(name, x.T)
+            self.writeNow = 0.
+
+    # initialize file writing
+    # file is crated very deltaT (real time)
+    def writeFile(self, deltaT):
+        self.writeEvery = deltaT
+        self.writeOn = True
+        self.writeNow = 0.
+
 
 a = 1.
 domain = np.linspace(-40., 40., 500)
@@ -89,6 +118,7 @@ f = 0.5 * np.exp(-(domain - T) ** 2)
 PDE = advectionPDE(domain, f0, a, dx, dt)
 PDE.timeScheme = "central"
 PDE.spatialScheme = "central"
+PDE.writeFile(0.1)
 PDE.advance(T)
 plt.plot(domain, PDE.f)
 plt.plot(domain, f0)
