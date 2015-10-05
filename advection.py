@@ -108,19 +108,21 @@ class advectionPDE:
 
 
 a = 1.
-domain = np.linspace(-40., 40., 500)
+domain = np.linspace(-40., 40., 1000)
 dx = domain[1] - domain[0]
-T = 2.
-dt = 0.2 * dx / a
+T = 10.
+dt = 0.1 * dx / a
 f0 = 0.5 * np.exp(-domain ** 2)
 f = 0.5 * np.exp(-(domain - T) ** 2)
 
 PDE = advectionPDE(domain, f0, a, dx, dt)
-PDE.timeScheme = "central"
+PDE.timeScheme = "forward"
 PDE.spatialScheme = "central"
-PDE.writeFile(0.1)
+#PDE.writeFile(0.1)
 PDE.advance(T)
-plt.plot(domain, PDE.f)
-plt.plot(domain, f0)
-plt.plot(domain, f)
+plt.plot(domain, PDE.f, label="Simulation result")
+plt.plot(domain, f0, label="initial condition")
+plt.plot(domain, f, label="analytical result after time {0}".format(T))
+#plt.legend(loc='outside')
+
 plt.show()
