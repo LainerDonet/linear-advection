@@ -109,7 +109,7 @@ class PDE:
 
 
 D = 0.01
-r = 0.1
+r = 0.4
 
 for n in [10, 20, 50]:
     domain = np.linspace(0., 1., n)
@@ -119,12 +119,14 @@ for n in [10, 20, 50]:
     f0 = domain * 0.0
     pde = PDE(domain, f0, D, dx, dt, correctBC)
     pde.advance(T)
-    plt.plot(domain, pde.f, '.-',
+    plt.plot(domain, pde.f, marker='^',
              label="Simulation (exp) result (N = {0})".format(n))
     pde = PDE(domain, f0, D, dx, dt, correctBC)
     pde.advance(T, implicit=True)
-    plt.plot(domain, pde.f, '--',
+    plt.plot(domain, pde.f, marker='o',
              label="Simulation (imp) result (N = {0})".format(n))
+    plt.grid()
+    #plt.yscale('log')
 
 plt.legend(loc='best')
 plt.show()
