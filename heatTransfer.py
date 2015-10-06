@@ -47,16 +47,38 @@ class PDE:
         self.fold = np.array(self.f)
         self.f = f
 
+    # Crank - Nicholson scheme
+    def implicit_step(self):
+        self.correctBC(self.f)
+        r = self.D * self.dt / self.dx ** 2
+        b = np.zeros(self.N)
+        A = np.zeros((self.N, self.N))
+        A[0][0] = 1.
+        A[self.N-1][self.N-1] = 1.
+        b[0] = self.f[0]
+        b[self.N-1] = self.f[self.N-1]
+        for i in range(1, self.N - 1):
+            A[i][i-1] = -r
+            A[i][i] = 2.0 * (1. + r)
+            A[i][i+1] = -r
+
+            b[i] = r * self.f[i-1] \
+                + 2. * (1. - r) * self.f[i] + r * self.f[i+1]
+        self.f = np.linalg.solve(A, b)
+
     # calculate how many time steps to perform
     # realTime indicates time is in seconds
     # realTime == False indicates time is given initerations
-    def explicit_advance(self, time, realTime=True):
+    def advance(self, time, realTime=True, implicit=False):
         if realTime:
             n = (int)(time / dt)
         else:
             n = time
         for i in range(n):
-            self.explicit_step()
+            if implicit:
+                self.implicit_step()
+            else:
+                self.explicit_step()
 
             # save to a file
             self.T = i * dt
@@ -87,17 +109,22 @@ class PDE:
 
 
 D = 0.01
-r = 0.4
+r = 0.1
 
-for n in [10, 20, 50, 100]:
+for n in [10, 20, 50]:
     domain = np.linspace(0., 1., n)
     dx = domain[1] - domain[0]
     T = 10.
     dt = r / D * dx ** 2
     f0 = domain * 0.0
     pde = PDE(domain, f0, D, dx, dt, correctBC)
-    pde.explicit_advance(T)
-    plt.plot(domain, pde.f, label="Simulation result (N = {0})".format(n))
+    pde.advance(T)
+    plt.plot(domain, pde.f, '.-',
+             label="Simulation (exp) result (N = {0})".format(n))
+    pde = PDE(domain, f0, D, dx, dt, correctBC)
+    pde.advance(T, implicit=True)
+    plt.plot(domain, pde.f, '--',
+             label="Simulation (imp) result (N = {0})".format(n))
 
 plt.legend(loc='best')
 plt.show()

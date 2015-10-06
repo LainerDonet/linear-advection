@@ -62,11 +62,11 @@ class advectionPDE:
     # discretisation of df/dx term
     def gradient(self, f, dx, i):
         if self.spatialScheme == "central":
-            return (f[i + 1] - f[i - 1]) / dx / 2.
+            return (self.f[i + 1] - self.f[i - 1]) / dx / 2.
         elif self.spatialScheme == 'forward':
-            return (f[i + 1] - f[i]) / dx
+            return (self.f[i + 1] - self.f[i]) / dx
         elif self.spatialScheme == 'backward':
-            return (f[i] - f[i - 1]) / dx
+            return (self.f[i] - self.f[i - 1]) / dx
         else:
             sys.exit("wrong spatial scheme selected...\nprogram closing")
 
@@ -75,7 +75,7 @@ class advectionPDE:
     # it is used to multiply the discretised gradient
     def d_dt(self, f, dt):
         if self.timeScheme == "central":
-            f = np.array(self.fold)
+            f = np.array(self.fold * 1.)
             self.mdt = self.dt * 2.
         elif self.timeScheme == "forward":
             f = np.array(f)
@@ -108,16 +108,16 @@ class advectionPDE:
 
 
 a = 1.
-domain = np.linspace(-40., 40., 1000)
+domain = np.linspace(-40., 40., 100)
 dx = domain[1] - domain[0]
-T = 10.
+T = 5.
 dt = 0.1 * dx / a
 f0 = 0.5 * np.exp(-domain ** 2)
 f = 0.5 * np.exp(-(domain - T) ** 2)
 
 PDE = advectionPDE(domain, f0, a, dx, dt)
 PDE.timeScheme = "forward"
-PDE.spatialScheme = "central"
+PDE.spatialScheme = "backward"
 #PDE.writeFile(0.1)
 PDE.advance(T)
 plt.plot(domain, PDE.f, label="Simulation result")
